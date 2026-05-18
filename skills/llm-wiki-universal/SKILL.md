@@ -454,19 +454,13 @@ node "${SKILL_DIR}/scripts/adapter-state.js" classify-run <source_id> <exit_code
 - 如果 `adapter_name=youtube-transcript` → 调用 `youtube-transcript`
 - 如果 `adapter_name=baoyu-url-to-markdown` → 调用 `baoyu-url-to-markdown`
 
-**URL 原始素材保存形态（强制规范）**：
+**raw 原始素材保存形态**：
 
-- 对网页长文、公众号、知乎文章、新闻/博客等**文章型 URL**，默认必须保存为一个 raw 素材包，而不是只保存单个 Markdown：
-  - 目录：`raw/<来源分类>/<安全标题>/`
-  - Markdown：`raw/<来源分类>/<安全标题>/<安全标题>.md`
-  - HTML 快照：`raw/<来源分类>/<安全标题>/<安全标题>-captured.html`
-  - 本地媒体：`raw/<来源分类>/<安全标题>/imgs/`、`videos/`
-- 调用 `baoyu-url-to-markdown` 时，文章型 URL 默认使用 `-o "<目标 Markdown 文件>" --download-media`，让图片/视频下载到 Markdown 同级目录下的 `imgs/` / `videos/`，并让 Markdown 链接指向本地资源。
-- 不要因为网页工具默认能输出单个 Markdown，就把文章型 URL 直接丢进 `raw/wechat/xxx.md` 或 `raw/articles/xxx.md`；这会让 HTML 快照、封面图、正文图片和 Obsidian 图谱维护变差。
-- 只有在以下情况下，才允许保存为单个 Markdown 文件：
-  - 用户明确说“不要下载图片/媒体”“只要正文 Markdown”；
-  - 素材本身是纯文本、短帖、无媒体短内容；
-  - 当前 Agent 环境无法运行媒体下载能力，此时必须在最终回复里说明“本次只保存了 Markdown，未本地化媒体”。
+- `raw/` 中的原始素材可以是**单文件素材**，也可以是**文件夹素材**。
+- 单文件素材适用于纯文本、短文、无重要图片/附件的文章，例如 `raw/articles/xxx.md`。
+- 文件夹素材适用于包含重要图片、HTML 快照、视频、附件或其他配套资源的文章，例如 `raw/wechat/xxx/xxx.md` + `imgs/`。
+- 判断时关注素材本身：如果图片、快照或附件对理解原文有价值，优先保留为文件夹素材；如果主要价值都在正文文本，可以保存为单文件素材。
+- 对文件夹素材，`wiki/sources` 里的“原文位置”必须链接到其中的 Markdown 文件，而不是文件夹。
 
 **本地文件**：
 - 统一走 `node "${SKILL_DIR}/scripts/source-registry.js" match-file "<path>"`
@@ -498,8 +492,8 @@ node "${SKILL_DIR}/scripts/adapter-state.js" classify-run <source_id> <exit_code
 
 2. **保存原始素材**到 `raw/` 对应目录：
    - 根据素材类型保存到对应目录（articles/、tweets/、wechat/、xiaohongshu/、zhihu/ 等）
-   - 文章型 URL 默认保存为 `raw/<来源分类>/<安全标题>/<安全标题>.md` 素材包；不要只保存为 `raw/<来源分类>/<安全标题>.md`
-   - 本地文件、纯文本、短内容可保存为单个 Markdown，文件名格式：`{日期}-{短标题}.md`
+   - 根据上方 raw 原始素材保存形态，保存为单文件素材或文件夹素材；文件夹素材的入口是其中的 Markdown 文件
+   - 单文件素材的文件名格式：`{日期}-{短标题}.md`
    - 如果是 URL 类素材，在文件头部记录原始 URL
    - **raw 目录原则上是原始素材区**：保存完成后不做内容性改写；但允许执行机械维护后处理（本地链接尖括号规范化、附件审计报告），不得自动删除附件或重写原文含义
 
